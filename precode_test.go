@@ -7,43 +7,39 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
 )
 
 func TestMainHandlerWhenAllOk(t *testing.T) {
-	req, err := http.NewRequest("GET", "/cafe?count=3&city=moscow", nil)
-	require.NoError(t, err)
+	req := httptest.NewRequest("GET", "/cafe?count=2&city=moscow", nil)
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
 
-	assert.Equal(t, 200, responseRecorder.Code)
-	assert.NotEmpty(t, string(responseRecorder.Body.String()))
+	assert.Equal(t, responseRecorder.Code, http.StatusOK)
+	assert.NotEmpty(t, responseRecorder.Body.String())
 }
 
 func TestMainHandlerWhenWrongCity(t *testing.T) {
-	req, err := http.NewRequest("GET", "/cafe?count=3&city=spb", nil)
-	require.NoError(t, err)
+	req := httptest.NewRequest("GET", "/cafe?count=3&city=spb", nil)
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
 
-	assert.Equal(t, 400, responseRecorder.Code)
-	assert.Equal(t, "wrong city value", responseRecorder.Body.String())
+	assert.Equal(t, responseRecorder.Code, http.StatusBadRequest)
+	assert.Equal(t, responseRecorder.Body.String(), "wrong city value")
 }
 
 func TestMainHandlerWhenCountMoreThanTotal(t *testing.T) {
 	totalCount := 4
-	req, err := http.NewRequest("GET", "/cafe?count=5&city=moscow", nil)
-	require.NoError(t, err)
+	req := httptest.NewRequest("GET", "/cafe?count=5&city=moscow", nil)
 
 	responseRecorder := httptest.NewRecorder()
 	handler := http.HandlerFunc(mainHandle)
 	handler.ServeHTTP(responseRecorder, req)
 
-	rRstring := strings.Split(responseRecorder.Body.String(), ",")
-	assert.Equal(t, 200, responseRecorder.Code)
-	assert.Len(t, rRstring, totalCount)
+	respString := strings.Split(responseRecorder.Body.String(), ",")
+	assert.Equal(t, responseRecorder.Code, http.StatusOK)
+	assert.Len(t, respString, totalCount)
 }
